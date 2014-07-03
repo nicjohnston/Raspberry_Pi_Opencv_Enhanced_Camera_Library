@@ -86,9 +86,14 @@ typedef struct _RASPIVID_STATE
 	int height;                         /// requested height of image
 	int bitrate;                        /// Requested bitrate
 	int framerate;                      /// Requested frame rate (fps)
+	int intraperiod;
+	int quantisationParameter;
 	int graymode;			/// capture in gray only (2x faster)
 	int immutableInput;     /// Flag to specify whether encoder works in place or creates a new buffer. Result is preview can display either
                             /// the camera output or the encoder output (with compression artifacts)
+	int profile;
+	int bInlineHeaders;
+	int inlineMotionVectors;
 	RASPICAM_CAMERA_PARAMETERS camera_parameters; /// Camera setup parameters
 
 	MMAL_COMPONENT_T *camera_component;    /// Pointer to the camera component
@@ -127,8 +132,13 @@ static void default_status(RASPIVID_STATE *state)
 //   state->height 			= 960;		// use a multiple of 240 (480, 960)
    state->bitrate 			= 10000000; // This is a decent default bitrate for 1080p
    state->framerate 		= VIDEO_FRAME_RATE_NUM;
+   state->intraperiod = 0;    // Not set
+   state->quantisationParameter = 0;
    state->immutableInput 	= 1;
    state->graymode 			= 0;		// Gray (1) much faster than color (0)
+   state->profile = MMAL_VIDEO_PROFILE_H264_HIGH;
+   state->bInlineHeaders = 0;
+   state->inlineMotionVectors = 0;
    
    // Set up the camera_parameters to default
    raspicamcontrol_set_defaults(&state->camera_parameters);
@@ -453,7 +463,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 
    }
 
-   /*if (state->intraperiod)
+   if (state->intraperiod)
    {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, state->intraperiod};
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
@@ -462,9 +472,9 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
          vcos_log_error("Unable to set intraperiod");
          goto error;
       }
-   }*/
+   }
 
-   /*if (state->quantisationParameter)
+   if (state->quantisationParameter)
    {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_VIDEO_ENCODE_INITIAL_QUANT, sizeof(param)}, state->quantisationParameter};
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
@@ -490,9 +500,9 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
          goto error;
       }
 
-   }*/
+   }
 
-   /*{
+   {
       MMAL_PARAMETER_VIDEO_PROFILE_T  param;
       param.hdr.id = MMAL_PARAMETER_PROFILE;
       param.hdr.size = sizeof(param);
@@ -506,7 +516,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
          vcos_log_error("Unable to set H264 profile");
          goto error;
       }
-   }*/
+   }
 
    if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, state->immutableInput) != MMAL_SUCCESS)
    {
@@ -514,7 +524,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       // Continue rather than abort..
    }
 
-   /*//set INLINE HEADER flag to generate SPS and PPS for every IDR if requested
+   //set INLINE HEADER flag to generate SPS and PPS for every IDR if requested
    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_HEADER, state->bInlineHeaders) != MMAL_SUCCESS)
    {
       vcos_log_error("failed to set INLINE HEADER FLAG parameters");
@@ -526,7 +536,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    {
       vcos_log_error("failed to set INLINE VECTORS parameters");
       // Continue rather than abort..
-   }*/
+   }
 
    //  Enable component
    status = mmal_component_enable(encoder);
@@ -661,12 +671,12 @@ RaspiCamCvCapture * raspiCamCvCreateCameraCapture(int index)
 	   return NULL;
 	} /*else if (!create_encoder_component(state))
 	{
-	vcos_log_error("%s: Failed to create encode component", __func__);
+		vcos_log_error("%s: Failed to create encode component", __func__);
 		destroy_camera_component(state);
 	}*/
-	
-	create_encoder_component(state);
-	
+    
+    create_encoder_component(state);
+
 	camera_video_port = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
 	//camera_still_port = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
 
@@ -810,7 +820,6 @@ IplImage * raspiCamCvQueryFrame_New(RaspiCamCvCapture * capture, int mode)
 	return state->py;
 }
 
-
 IplImage * raspiCamCvQueryFrame_New_Final(RaspiCamCvCapture * capture) {
 	RASPIVID_STATE * state = capture->pState;
 	vcos_semaphore_post(&state->capture_sem);
@@ -826,53 +835,3 @@ IplImage * raspiCamCvQueryFrame_New_Final(RaspiCamCvCapture * capture) {
 	//cvCvtColor(state->yuvImage,state->dstImage,CV_YCrCb2RGB);	// convert in RGB color space (slow)
 	return state->yuvImage;
 }
-
-
-void raspiCamCvQueryFrame_New_Three(RaspiCamCvCapture * capture, IplImage * Y, IplImage * U, IplImage * V)
-{
-	RASPIVID_STATE * state = capture->pState;
-	vcos_semaphore_post(&state->capture_sem);
-	vcos_semaphore_wait(&state->capture_done_sem);
-
-	if (state->graymode==0)
-	//if (mode==0)
-	{
-		//cvResize(state->pu, state->pu_big, CV_INTER_NN);
-		//cvResize(state->pv, state->pv_big, CV_INTER_NN);  //CV_INTER_LINEAR looks better but it's slower
-		//cvResize(state->pu, state->pu_big, CV_INTER_AREA);
-		//cvResize(state->pv, state->pv_big, CV_INTER_AREA);
-		Y = state->py;
-		U = state->pu;
-		V = state->pv;
-	}
-	//return state->py;
-}
-
-
-/*
-void raspiCamCvQueryFrame_New_Start(RASPIVID_STATE * state, RaspiCamCvCapture * capture)//, cvMat& Y, cvMat& U, cvMat& V)
-{
-	state = capture->pState;
-	vcos_semaphore_post(&state->capture_sem);
-	vcos_semaphore_wait(&state->capture_done_sem);
-
-}
-
-
-IplImage * raspiCamCvQueryFrame_New_Y()//, cvMat& Y, cvMat& U, cvMat& V)
-{
-	return state->py;
-}
-
-
-IplImage * raspiCamCvQueryFrame_New_U()//, cvMat& Y, cvMat& U, cvMat& V)
-{
-	return state->pu;
-}
-
-
-IplImage * raspiCamCvQueryFrame_New_V()//, cvMat& Y, cvMat& U, cvMat& V)
-{
-	return state->pv;
-}
-*/
