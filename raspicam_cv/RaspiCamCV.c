@@ -670,13 +670,13 @@ RaspiCamCvCapture * raspiCamCvCreateCameraCapture(int index)
 	   vcos_log_error("%s: Failed to create camera component", __func__);
 	   raspiCamCvReleaseCapture(&capture);
 	   return NULL;
-	} /*else if (!create_encoder_component(state))
+	} else if ((status = create_encoder_component(state)) != MMAL_SUCCESS)
 	{
-		vcos_log_error("%s: Failed to create encode component", __func__);
-		destroy_camera_component(state);
-	}*/
-    
-    create_encoder_component(state);
+	   vcos_log_error("%s: Failed to create encode component", __func__);
+	   destroy_camera_component(state);
+	}
+	
+	//create_encoder_component(state);
 
 	camera_video_port = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
 	//camera_still_port = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
