@@ -5,4 +5,4 @@ The modification includes the encoder from the original raspivid code in order t
 
 This is a work in progress, and is currently not functioning properly.
 
-Recv.cpp and Send.cpp can be ignored as they only apply to streaming the recieved OpenCV frames over a network using TCP.
+Recv.cpp and Send.cpp can be ignored because they only apply to streaming the recieved OpenCV frames over a network using TCP.
