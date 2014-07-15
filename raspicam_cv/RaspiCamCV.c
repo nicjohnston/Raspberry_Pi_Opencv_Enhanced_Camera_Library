@@ -641,6 +641,8 @@ RaspiCamCvCapture * raspiCamCvCreateCameraCapture(int index)
 	MMAL_STATUS_T status = -1;
 	MMAL_PORT_T *camera_video_port = NULL;
 	MMAL_PORT_T *camera_still_port = NULL;
+	MMAL_PORT_T *encoder_input_port = NULL;
+	MMAL_PORT_T *encoder_output_port = NULL;
 
 	bcm_host_init();
 
@@ -680,6 +682,8 @@ RaspiCamCvCapture * raspiCamCvCreateCameraCapture(int index)
 
 	camera_video_port = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
 	//camera_still_port = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
+	//encoder_input_port  = state->encoder_component->input[0];
+	//encoder_output_port = state->encoder_component->output[0];
 
 	// assign data to use for callback
 	camera_video_port->userdata = (struct MMAL_PORT_USERDATA_T *)state;
