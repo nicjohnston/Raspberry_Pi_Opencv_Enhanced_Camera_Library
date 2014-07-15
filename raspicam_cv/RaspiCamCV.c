@@ -507,7 +507,8 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       param.hdr.id = MMAL_PARAMETER_PROFILE;
       param.hdr.size = sizeof(param);
 
-      param.profile[0].profile = state->profile;
+      //param.profile[0].profile = state->profile;
+      param.profile[0].profile = MMAL_VIDEO_PROFILE_H264_HIGH;
       param.profile[0].level = MMAL_VIDEO_LEVEL_H264_4; // This is the only value supported
 
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
