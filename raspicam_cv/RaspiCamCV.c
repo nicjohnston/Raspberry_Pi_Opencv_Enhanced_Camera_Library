@@ -554,6 +554,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    if (!pool)
    {
       vcos_log_error("Failed to create buffer header pool for encoder output port %s", encoder_output->name);
+      goto error;
    }
 
    state->video_pool = pool;
@@ -676,6 +677,7 @@ RaspiCamCvCapture * raspiCamCvCreateCameraCapture(int index)
 	{
 	   vcos_log_error("%s: Failed to create encode component", __func__);
 	   destroy_camera_component(state);
+	   return NULL;
 	}
 	
 	//create_encoder_component(state);
