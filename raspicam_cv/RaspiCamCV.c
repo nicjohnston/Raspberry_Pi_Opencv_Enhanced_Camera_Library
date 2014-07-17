@@ -75,7 +75,7 @@ VCOS_LOG_CAT_T raspitex_log_category = VCOS_LOG_INIT("RaspiCV", VCOS_LOG_TRACE);
 
 // Max bitrate we allow for recording
 //const int MAX_BITRATE = 30000000; // 30Mbits/s
-const int MAX_BITRATE = 10000000; // 100Mbits/s
+const int MAX_BITRATE = 25000000; // 25Mbits/s
 
 int mmal_status_to_int(MMAL_STATUS_T status);
 
