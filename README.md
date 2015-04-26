@@ -16,3 +16,6 @@ run.sh will remake raspicam_cv and recompile the test program.  If you want the 
 Recv.cpp and Send.cpp can be ignored because they only apply to streaming the recieved OpenCV frames over a network using TCP.
 
 A functioning revision of this library can be found at https://github.com/6by9/Raspberry_Pi_Opencv_Enhanced_Camera_Library.
+
+Update 4-26-2015:
+When I tested this library last December it failed with multiple errors, however I should be able to resume work on this library in mid May.
